@@ -1,0 +1,76 @@
+%% import
+load("C:\Users\Egor\Desktop\MIPT\2nd_semester\Lab_plasma\raw_data_2026-04-16.mat")
+
+%% settings
+% с. 364 и с. 398
+
+% spectrogram
+
+fs = 32000; 
+
+data1 = data.raw(:,1,5,2); % термоанемометр
+data2 = data.raw(:,3,5,2)*10; % поверхностный датчик
+
+signal1=data1;
+signal2=data2;
+
+
+win = hamming(4096);
+noverlap = 2048;
+nfft = 1024; % количество точек бпф
+
+
+%% graphs
+
+
+[S1, f] = spectrogram(signal1, win, noverlap, nfft, fs);
+[S2, ~] = spectrogram(signal2, win, noverlap, nfft, fs);
+
+pxx1 = mean(abs(S1).^2, 2);
+pxx2 = mean(abs(S2).^2, 2);
+
+figure();
+subplot(2,1,1);
+loglog(f, (pxx1));
+xlabel('Hz'); 
+ylabel('');
+title('CTA');
+grid on;
+xlim([0 fs/2]);
+
+subplot(2,1,2);
+loglog(f, (pxx2));
+xlabel('Hz'); 
+ylabel('');
+title('поверхностный датчик');
+grid on;
+xlim([0 fs/2]);
+
+%% взаимный спектр
+
+% для взаимного спектра:
+% взять сопряженное (conj) от одного из сигналов и поточечно (.*) умножить на второе
+
+Sxy = mean(S1 .* conj(S2), 2);
+
+pxy = abs(Sxy); % амплитуда взаимного спектра
+
+phi = angle(Sxy);  % фаза взаимного спектра (рад)
+
+figure();
+subplot(2,1,1);
+loglog(f, pxy);
+xlabel('Hz');
+ylabel('|Gxy|');
+title('амплитуда');
+grid on;
+xlim([1 fs/2]);
+
+subplot(2,1,2);
+semilogx(f, rad2deg(phi));
+xlabel('Hz');
+ylabel('градусы');
+title('фаза');
+grid on;
+xlim([1 fs/2]);
+ylim([-180 180]);
